@@ -21,6 +21,48 @@ def createDocblockPlaceholders(snip):
 
     # Execute the snippet.
     snip.expand_anon(snippet)
+
+def parseParameterString(parameters):
+    return re.findall(r'\w*\s\$\w*', parameters)
+
+def constructorAssignment(parameters, snip):
+    parameters = parameters.replace(" ", "").split(",")
+
+    snip >> 1
+
+    for parameter in parameters:
+        variable = parameter.split("$")[-1]
+
+        snip += "$this->%s = $%s" % (variable, variable)
+
+def addDocblock(parameters, returnType, snip):
+    snip += "/**"
+    parseParamDocs(parameters, snip)
+    parseReturnDocs(returnType, snip)
+    snip += " */"
+
+def parseParamDocs(parameters, snip):
+    parameters = parseParameterString(parameters)
+
+    if len(parameters) > 0:
+
+        for parameter in parameters:
+            variable = parameter.strip().split(" ")
+
+            snip += " * @param %s %s" % (variable[0], variable[-1])
+
+def parseReturnDocs(returnType, snip):
+    if (returnType):
+        snip += " * @return %s" % (returnType)
+
+def addClassProperties(parameters, snip):
+    parameters = parseParameterString(parameters)
+
+    for parameter in parameters:
+        variable = parameter.strip().split(" ")
+
+        snip += "/** @var %s */" % (variable[0])
+        snip += "private %s;\n" % (variable[-1])
 endglobal
 
 ##########################
@@ -34,7 +76,7 @@ namespace ${2:`!p
 relpath = os.path.relpath(path)
 classname = re.search(r'[A-Z].+(?=/)', relpath)
 if classname:
-    snip.rv = classname.group().replace('/', '\\')
+    snip.rv = 'App\\' + classname.group().replace('/', '\\')
 else:
     snip.rv = 'App'
 `};
@@ -47,6 +89,16 @@ class ${1:`!p snip.rv = snip.basename`}
 }
 endsnippet
 
+snippet con "Class Constructor" b
+`!p
+addClassProperties(t[1], snip)
+addDocblock(t[1], None, snip)
+`
+public function __construct($1)
+{`!p constructorAssignment(t[1], snip)`
+}$0
+endsnippet
+
 snippet interface "Interface Declaration" b
 <?php
 
@@ -54,7 +106,7 @@ namespace ${2:`!p
 relpath = os.path.relpath(path)
 classname = re.search(r'[A-Z].+(?=/)', relpath)
 if classname:
-    snip.rv = classname.group().replace('/', '\\')
+    snip.rv = 'App\\' + classname.group().replace('/', '\\')
 else:
     snip.rv = 'App'
 `};
@@ -74,12 +126,12 @@ namespace ${2:`!p
 relpath = os.path.relpath(path)
 classname = re.search(r'[A-Z].+(?=/)', relpath)
 if classname:
-    snip.rv = 'Test\\' + classname.group().replace('/', '\\')
+    snip.rv = 'Tests\\' + classname.group().replace('/', '\\')
 else:
     snip.rv = 'Test'
 `};
 
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 /**
  * @author `!v g:snips_author`
@@ -95,9 +147,10 @@ endsnippet
 
 # Methods
 snippet pubf "Public Function" b
-public function $1($2)
+`!p addDocblock(t[2], t[3], snip)`
+public function $1($2): $3
 {
-    $3
+    $4
 }
 endsnippet
 
