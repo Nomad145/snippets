@@ -33,10 +33,10 @@ def constructorAssignment(parameters, snip):
     for parameter in parameters:
         variable = parameter.split("$")[-1]
 
-        snip += "$this->%s = $%s" % (variable, variable)
+        snip += "$this->%s = $%s;" % (variable, variable)
 
 def addDocblock(parameters, returnType, snip):
-    snip += "/**"
+    snip.rv += snip.mkline("/**")
     parseParamDocs(parameters, snip)
     parseReturnDocs(returnType, snip)
     snip += " */"
@@ -61,8 +61,8 @@ def addClassProperties(parameters, snip):
     for parameter in parameters:
         variable = parameter.strip().split(" ")
 
-        snip += "/** @var %s */" % (variable[0])
-        snip += "private %s;\n" % (variable[-1])
+        snip.rv += snip.mkline("/** @var %s */" % (variable[0]))
+        snip += "private %s;\n\n" % (variable[-1])
 endglobal
 
 ##########################
@@ -101,6 +101,8 @@ endsnippet
 
 snippet interface "Interface Declaration" b
 <?php
+
+declare(strict_types=1);
 
 namespace ${2:`!p
 relpath = os.path.relpath(path)
@@ -149,22 +151,21 @@ endsnippet
 snippet pubf "Public Function" b
 `!p addDocblock(t[2], t[3], snip)`
 public function $1($2): $3
-{
-    $4
+{$4
 }
 endsnippet
 
-snippet prof "Protected Function" b
-protected function $1($2)
-{
-    $3
+snippet prof "Private Function" b
+`!p addDocblock(t[2], t[3], snip)`
+protected function $1($2): $3
+{$4
 }
 endsnippet
 
 snippet prif "Private Function" b
-private function $1($2)
-{
-    $3
+`!p addDocblock(t[2], t[3], snip)`
+private function $1($2): $3
+{$4
 }
 endsnippet
 
