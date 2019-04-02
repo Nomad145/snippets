@@ -63,6 +63,11 @@ def addClassProperties(parameters, snip):
 
         snip.rv += snip.mkline("/** @var %s */" % (variable[0]))
         snip += "private %s;\n\n" % (variable[-1])
+
+def deCamelCaseString(variable, snip):
+    if variable:
+        snip.rv += (variable[0].lower() + variable[1:])
+
 endglobal
 
 ##########################
@@ -240,5 +245,15 @@ public function set`!p snip.rv = re.sub('([a-zA-Z])', lambda x: x.groups()[0].up
 public function get`!p snip.rv = re.sub('([a-zA-Z])', lambda x: x.groups()[0].upper(), t[1], 1)`() : ?`!p snip.rv = t[2]`
 {
     return $this->`!p snip.rv = t[1]`;
+}
+endsnippet
+
+snippet get "Property Getter" b
+/**
+ * @return $2
+ */
+public function get$1(): $2
+{
+    return $this->`!p deCamelCaseString(t[1], snip)`;
 }
 endsnippet
